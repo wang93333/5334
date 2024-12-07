@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>数码</title>
+    <style>
+        body {
+            background: linear-gradient(to right, #a1c4fd, #c2e9fb);
+            font-family: 'Microsoft YaHei', sans-serif;
+            color: #333;
+            text-align: center;
+            padding: 20px;
+        }
+        h1 {
+            margin-bottom: 40px;
+            font-size: 36px;
+            color: #333;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 30px;
+            border-radius: 10px;
+            display: inline-block;
+        }
+        input[type="text"] {
+            width: 300px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+        select {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4facfe;
+            color: #fff;
+            font-size: 18px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #00f2fe;
+        }
+        .result {
+            margin-top: 40px;
+            text-align: left;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            color: #333;
+        }
+        .result h2 {
+            font-size: 28px;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 10px;
+        }
+        .result p {
+            font-size: 18px;
+            line-height: 1.6;
+        }
+        .highlight {
+            color: #ff6a00;
+        }
+        .red {
+            color: #ff0000;
+        }
+        .gua {
+            font-size: 48px;
+            line-height: 1;
+        }
+        .input-group {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        .remove-btn {
+            margin-left: 10px;
+            padding: 5px 10px;
+            background-color: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .add-btn {
+            margin: 10px 0;
+            padding: 5px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .pagination {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .pagination button {
+            margin: 0 10px;
+            padding: 5px 15px;
+        }
+        #pageInfo {
+            margin: 0 15px;
+        }
+        #filteredResults, #paginatedResults {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+        }
+        .summary {
+            background: #f5f5f5;
+            padding: 15px;
+            margin-bottom: 30px;
+            border-radius: 5px;
+            border-left: 4px solid #4facfe;
+        }
+        .summary h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        .summary p {
+            margin: 0;
+            font-size: 20px;
+            color: #4facfe;
+        }
+        .number-header {
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #f8f8f8;
+            border-radius: 5px;
+        }
+        .number {
+            font-size: 24px;
+            color: #ff0000;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        .magnetic-fields {
+            color: #666;
+            font-size: 18px;
+        }
+        .number-header::after {
+            content: '';
+            display: block;
+            clear: both;
+        }
+        .golden {
+            color: #FFD700 !important;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+        .golden-numbers {
+            color: #FFD700;
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        .normal-numbers {
+            color: #4facfe;
+            font-size: 20px;
+        }
+        .summary p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>数码分析</h1>
+    <div class="container">
+        <div id="inputContainer">
+            <div class="input-group">
+                <input type="text" class="number-input" placeholder="请输入4位数字或字母" maxlength="4" oninput="handleInput(this)">
+                <button type="button" class="remove-btn" onclick="removeInput(this)" style="display: none;">删除</button>
+            </div>
+        </div>
+      
+        <select id="gender">
+            <option value="male">男</option>
+            <option value="female">女</option>
+        </select>
+        <br>
+        <button onclick="analyzeAll()">开始分析</button>
+    </div>
+    
+    <!-- 筛选结果区域 -->
+    <div id="filteredResults" style="display: none;">
+        <h2>符合条件的号码分析</h2>
+        <div id="filteredContent"></div>
+    </div>
+
+    <!-- 分页显示区域 -->
+    <div id="paginatedResults" style="display: none;">
+        <h2>所有号码分析</h2>
+        <div id="pageContent"></div>
+        <div class="pagination">
+            <button onclick="prevPage()">上一页</button>
+            <span id="pageInfo"></span>
+            <button onclick="nextPage()">下一页</button>
+        </div>
+    </div>
+
+    <script>
+        // 八卦映射表
+        const guaMap = {
+            1: '坎',
+            2: '艮',
+            3: '艮',
+            4: '震',
+            5: '巽',
+            6: '巽',
+            7: '离',
+            8: '坤',
+            9: '坤',
+            10: '兑',
+            11: '乾',
+            12: '乾'
+        };
+
+        const guaSymbols = {
+            '乾': '☰',
+            '兑': '☱',
+            '离': '☲',
+            '震': '☳',
+            '巽': '☴',
+            '坎': '☵',
+            '艮': '☶',
+            '坤': '☷'
+        };
+
+        const guaYao = {
+            '乾': ['阳', '阳', '阳'],
+            '兑': ['阳', '阳', '阴'],
+            '离': ['阳', '阴', '阳'],
+            '震': ['阳', '阴', '阴'],
+            '巽': ['阴', '阳', '阳'],
+            '坎': ['阴', '阳', '阴'],
+            '艮': ['阴', '阴', '阳'],
+            '坤': ['阴', '阴', '阴']
+        };
+
+        function analyze(inputValue, gender) {
+            let resultDiv = document.createElement('div');
+            resultDiv.className = 'result';
+
+            // 处理输入，提取数字
+            let numbers = parseInput(inputValue);
+            if (numbers.length !== 4) {
+                alert('请输入正确的4位数字或字母！');
+                return '';
+            }
+
+            // 计算先天数和后天数
+            let prenatalNumbers = numbers.slice();
+            let postnatalNumbers = numbers.map(n => n <= 6 ? n + 6 : n - 6);
+
+            // 显示先天数和后天数
+            resultDiv.innerHTML += '<h2>先天数：' + prenatalNumbers.join(', ') + '</h2>';
+            resultDiv.innerHTML += '<h2>后天数：' + postnatalNumbers.join(', ') + '</h2>';
+
+            // 开始分析
+            let fortune = analyzeFortune(prenatalNumbers, postnatalNumbers);
+            let relationship = analyzeRelationship(prenatalNumbers, postnatalNumbers, gender);
+            let health = analyzeHealth(prenatalNumbers, postnatalNumbers);
+            let objects = analyzeObjects(prenatalNumbers, postnatalNumbers);
+            let years = analyzeYears(prenatalNumbers, postnatalNumbers);
+            let magneticFields = analyzeMagneticFields(prenatalNumbers, postnatalNumbers);
+
+            // 显示结果
+            resultDiv.innerHTML += fortune;
+            resultDiv.innerHTML += relationship;
+            resultDiv.innerHTML += health;
+            resultDiv.innerHTML += objects;
+            resultDiv.innerHTML += years;
+            resultDiv.innerHTML += magneticFields;
+
+            return resultDiv.innerHTML;
+        }
+
+        function parseInput(input) {
+            // 处理括号和字母
+            input = input.replace(/（/g, '(').replace(/）/g, ')');
+            let matches = input.match(/\([^\(\)]+\)|[A-Z0-9]/g);
+            let numbers = [];
+            if (matches) {
+                matches.forEach(item => {
+                    if (item.startsWith('(')) {
+                        let num = parseInt(item.replace(/\(|\)/g, ''), 10);
+                        numbers.push(convertNumber(num));
+                    } else if (/[A-Z]/.test(item)) {
+                        let num = item.charCodeAt(0) - 64; // A对应1
+                        num = ((num - 1) % 12) + 1; // 以12为循环
+                        numbers.push(num);
+                    } else {
+                        numbers.push(convertNumber(parseInt(item, 10)));
+                    }
+                });
+            }
+            return numbers;
+        }
+
+        function convertNumber(num) {
+            if (num === 0) return 10;
+            return num;
+        }
+
+        // 五行对应
+        function getFiveElement(num, index, numbers) {
+            let element = '';
+            if ([1, 2, 12].includes(num)) element = '水';
+            else if ([3, 9].includes(num)) element = '土';
+            else if ([4, 5].includes(num)) element = '木';
+            else if ([6, 7].includes(num)) element = '火';
+            else if ([10, 11].includes(num)) element = '金';
+            else if (num === 8) {
+                // 判断8的五行
+                let adjacentNums = [];
+                if (index > 0) adjacentNums.push(numbers[index - 1]);
+                if (index < numbers.length - 1) adjacentNums.push(numbers[index + 1]);
+                if (adjacentNums.some(n => [3, 6, 7, 9].includes(n))) {
+                    element = '水';
+                } else {
+                    element = '土';
+                }
+            }
+            return element;
+        }
+
+        // 阴阳属性
+        function getYinYang(num, adjacentNum) {
+            const yinNumbers = [5, 7, 8, 9, 10];
+            const yangNumbers = [1, 2, 3, 4, 11, 12];
+            if (num === 6) {
+                if (yangNumbers.includes(adjacentNum)) return '阴';
+                else return '阳';
+            }
+            return yangNumbers.includes(num) ? '阳' : '阴';
+        }
+
+        // 生克关系（只论生克，不论前后）
+        function getRelation(element1, element2) {
+            const generate = {
+                '金': '水',
+                '水': '木',
+                '木': '火',
+                '火': '土',
+                '土': '金'
+            };
+            const overcome = {
+                '金': '木',
+                '木': '土',
+                '土': '水',
+                '水': '火',
+                '火': '金'
+            };
+            if (generate[element1] === element2) return '生';
+            if (overcome[element1] === element2) return '克';
+            if (generate[element2] === element1) return '被生';
+            if (overcome[element2] === element1) return '被克';
+            if (element1 === element2) return '同';
+            return '无';
+        }
+
+        // 运势判断
+        function analyzeFortune(prenatalNumbers, postnatalNumbers) {
+            let html = '<h2>断语1: 运势判断</h2>';
+            const ages = ['0-20岁', '20-40岁', '40-60岁', '60-80岁'];
+
+            // 先天运势
+            html += '<p><strong>先天运势：</strong></p>';
+            for (let i = 0; i < 4; i++) {
+                let mainNum = prenatalNumbers[i];
+                let objectNum = prenatalNumbers[(i + 1) % 4];
+                let mainElement = getFiveElement(mainNum, i, prenatalNumbers);
+                let objectElement = getFiveElement(objectNum, (i + 1) % 4, prenatalNumbers);
+                let relation = getRelation(mainElement, objectElement);
+                let description = getFortuneDescription(relation);
+                html += `<p>${ages[i]}：${mainElement}${relation}${objectElement}（${mainNum}${relation}${objectNum}），${description}</p>`;
+            }
+
+            // 后天运势
+            html += '<p><strong>后天运势：</strong></p>';
+            for (let i = 0; i < 4; i++) {
+                let mainNum = postnatalNumbers[i];
+                let objectNum = postnatalNumbers[(i + 1) % 4];
+                let mainElement = getFiveElement(mainNum, i, postnatalNumbers);
+                let objectElement = getFiveElement(objectNum, (i + 1) % 4, postnatalNumbers);
+                let relation = getRelation(mainElement, objectElement);
+                let description = getFortuneDescription(relation);
+                html += `<p>${ages[i]}：${mainElement}${relation}${objectElement}（${mainNum}${relation}${objectNum}），${description}</p>`;
+            }
+
+            return html;
+        }
+
+        function getFortuneDescription(relation) {
+            switch (relation) {
+                case '生':
+                    return '主生物，破财';
+                case '克':
+                    return '主克物，辛苦得财';
+                case '被生':
+                    return '物生主，进财';
+                case '被克':
+                    return '克主，招灾';
+                case '同':
+                    return '物与主一样，贵人相助';
+                default:
+                    return '无明显生克关系';
+            }
+        }
+
+        // 人际关系
+        function analyzeRelationship(prenatalNumbers, postnatalNumbers, gender) {
+            let html = '<h2>断语2: 人际关系</h2>';
+
+            // 先天数分析
+            html += '<p><strong>先天分析：</strong></p>';
+            html += analyzeRelationshipPart(prenatalNumbers, gender);
+
+            // 后天数分析
+            html += '<p><strong>后天数分析：</strong></p>';
+            html += analyzeRelationshipPart(postnatalNumbers, gender);
+
+            return html;
+        }
+
+        function analyzeRelationshipPart(numbers, gender) {
+            let descriptions = '';
+            let num2 = numbers[1];
+            let num3 = numbers[2];
+            let adjacentNum2 = numbers[0]; // 用于���断6的阴阳属性
+            let adjacentNum3 = numbers[1];
+            let element2 = getFiveElement(num2, 1, numbers);
+            let element3 = getFiveElement(num3, 2, numbers);
+            let yinYang2 = getYinYang(num2, adjacentNum2);
+            let yinYang3 = getYinYang(num3, adjacentNum3);
+
+            // 生克关系（只论生，不论前后）
+            let relation = getRelation(element2, element3);
+            if (relation === '无') {
+                relation = getRelation(element3, element2);
+            }
+
+            let description = getRelationshipDescription(gender, relation, yinYang2, yinYang3);
+            descriptions += `<p>第二位数字为${num2}（${element2}/${yinYang2}），第三位数字为${num3}（${element3}/${yinYang3}），${element2}${relation}${element3}，${description}</p>`;
+
+            return descriptions;
+        }
+
+        function getRelationshipDescription(gender, relation, yinYang2, yinYang3) {
+            if (gender === 'male') {
+                if (yinYang2 === '阳' && yinYang3 === '阴') {
+                    if (['生', '被生'].includes(relation)) {
+                        return '阳生阴，男方为女方付出多，看的重要，女的有地位。';
+                    } else if (['克', '被克'].includes(relation)) {
+                        return '阳克阴，离婚之象。';
+                    } else if (relation === '同') {
+                        return '阳与阴同，男方和女方关系融洽。';
+                    }
+                }
+                if (yinYang2 === '阴' && yinYang3 === '阳') {
+                    if (['生', '被生'].includes(relation)) {
+                        return '阳生阳，人享女人的福，妻子当家做主。';
+                    } else if (['克', '被克'].includes(relation)) {
+                        return '阴克阳，男的怕老婆，吵架。';
+                    } else if (relation === '同') {
+                        return '阴与阳同，夫妻关系和谐。';
+                    }
+                }
+                if (yinYang2 === '阳' && yinYang3 === '阳') {
+                    if (['生', '被生', '同'].includes(relation)) {
+                        return '阳生阳，男方爱交朋友，讲义气，不顾家。';
+                    } else if (['克', '被克'].includes(relation)) {
+                        return '阳克阳，克妻，女人受伤多。';
+                    }
+                }
+                if (yinYang2 === '阴' && yinYang3 === '阴') {
+                    if (['生', '被生', '同'].includes(relation)) {
+                        return '阴生阴，多妻命，有情，桃花。';
+                    } else if (['克', '被克'].includes(relation)) {
+                        return '阴克阴，是克妻命，都是多妻命。';
+                    }
+                }
+            } else {
+                if (yinYang2 === '阳' && yinYang3 === '阴') {
+                    if (['生', '被生'].includes(relation)) {
+                        return '阳生阴，女人享男人的福，男人付出多。';
+                    } else if (['克', '被克'].includes(relation)) {
+                        return '阳克阴，女人怕丈夫，受丈夫的气。';
+                    } else if (relation === '同') {
+                        return '阳与阴同，夫妻关系和谐。';
+                    }
+                }
+                if (yinYang2 === '阴' && yinYang3 === '阳') {
+                    if (['生', '被生'].includes(relation)) {
+                        return '阴生阳，喜欢自己的丈夫，很会照顾家人。';
+                    } else if (['克', '被克'].includes(relation)) {
+                        return '阴克阳，对丈夫不好，有克夫之象，唠唠叨叨。';
+                    } else if (relation === '同') {
+                        return '阴与阳同，夫妻关系融洽。';
+                    }
+                }
+                if (yinYang2 === '阳' && yinYang3 === '阳') {
+                    if (['生', '被生', '同'].includes(relation)) {
+                        return '阳生阳，喜欢交朋友，有能力，情人多，婚姻不顺。';
+                    } else if (['克', '被克'].includes(relation)) {
+                        return '阳克阳，多婚命';
+                    }
+                }
+                if (yinYang2 === '阴' && yinYang3 === '阴') {
+                    if (['生', '被生', '同'].includes(relation)) {
+                        return '阴生阴，温柔，闺蜜多，对父母好，对丈夫好。';
+                    } else if (['克', '被克'].includes(relation)) {
+                        return '阴克阴，做事不讲理，心狠。';
+                    }
+                }
+            }
+            // 不需要"他情况"
+            return '';
+        }
+
+        // 身体疾病
+        function analyzeHealth(prenatalNumbers, postnatalNumbers) {
+            let html = '<h2>断语3: 身体疾病</h2>';
+            const parts = ['头', '胸', '腹', '腿'];
+
+            // 先天数分析
+            html += '<p><strong>先天数分析：</strong></p>';
+            html += '<p><em>疾病1：</em></p>';
+            html += analyzeHealthPart(prenatalNumbers, '先天数', '疾病1');
+            html += '<p><em>疾病2：</em></p>';
+            html += analyzeHealthPart(prenatalNumbers, '先天数', '疾病2');
+            html += '<p><em>疾病3：</em></p>';
+            html += analyzeHealthPart(prenatalNumbers, '先天数', '疾病3');
+
+            // 后天数分析
+            html += '<p><strong>后天数分析：</strong></p>';
+            html += '<p><em>疾病1：</em></p>';
+            html += analyzeHealthPart(postnatalNumbers, '后天数', '疾病1');
+            html += '<p><em>疾病2：</em></p>';
+            html += analyzeHealthPart(postnatalNumbers, '后天数', '疾病2');
+            html += '<p><em>疾病3：</em></p>';
+            html += analyzeHealthPart(postnatalNumbers, '后天数', '疾病3');
+
+            // 统计疾病出现频次
+            let allIssues = healthIssuesList;
+            if (allIssues.length > 0) {
+                let issueCount = {};
+                allIssues.forEach(issue => {
+                    issueCount[issue] = (issueCount[issue] || 0) + 1;
+                });
+                let maxCount = Math.max(...Object.values(issueCount));
+                let frequentIssues = Object.keys(issueCount).filter(key => issueCount[key] === maxCount);
+                if (frequentIssues.length === 1) {
+                    html += `<p><strong>总结：</strong>最常出现的疾病是：${frequentIssues[0]}</p>`;
+                }
+            }
+
+            // 清空临时存储的疾病列表
+            healthIssuesList = [];
+
+            return html;
+        }
+
+        let healthIssuesList = []; // 存储所有出现的疾病
+
+        function analyzeHealthPart(numbers, type, diseaseType) {
+            const parts = ['头', '胸', '腹', '腿'];
+            let descriptions = [];
+            const len = numbers.length;
+
+            function getHealthIssue(num) {
+                let issues = {
+                    1: '精神不好、血液毛病，静脉曲张、腿浮肿等毛病。',
+                    2: '腰痛，泌尿，患肾病、视力下降、中毒等病症。',
+                    3: '伤腿，石，胆囊，泌尿，易患胆结石、胆囊炎、手术之灾。',
+                    4: '肝胆易病，四肢痛，毛发不好，皮肤病。',
+                    5: '患肝胆病，坐骨神经疼、风湿病、五指、五趾易有病。',
+                    6: '小腹疼，眼，睡眠、患结肠炎，心血管病，妇女易患妇科病。',
+                    7: '心脏，血液病，高血压，眼。',
+                    8: '被盗，易患肠胃病，皮肤病，有手术之灾。妇女易患乳腺增生，乳腺癌。',
+                    9: '皮肤，泌尿，受克大肠，肠道、胃肠易患病。食道、咽喉、淋巴、肛门、皮肤易生病。颈椎也会有毛病。',
+                    10: '肺，牙，关节，扁桃体，受克易患肺病、浑身筋骨疼，口腔、口、牙齿易出现毛病。生疮、桃体发炎、风湿关节痛。',
+                    11: '牙，白血病，精神病，三叉神经疼、头盖骨生病、肺部生病、精神病、鼻窦炎、眼睛、耳朵易患病。',
+                    12: '神经衰弱，腰，受克易患精神病，前列腺炎症，膀胱炎，泌尿生殖系统疾病。'
+                };
+                return issues[num];
+            }
+
+            if (diseaseType === '疾病1') {
+                // 疾病1: 第一个数字到第四个数字分别代表头、胸、腹、腿。哪个数字被克，哪个部位容易有疾病。
+                for (let i = 0; i < len; i++) {
+                    let currentNum = numbers[i];
+                    let prevIndex = (i - 1 + len) % len;
+                    let nextIndex = (i + 1) % len;
+                    let prevNum = numbers[prevIndex];
+                    let nextNum = numbers[nextIndex];
+                    let elementCurrent = getFiveElement(currentNum, i, numbers);
+                    let elementPrev = getFiveElement(prevNum, prevIndex, numbers);
+                    let elementNext = getFiveElement(nextNum, nextIndex, numbers);
+
+                    // 检查是否被克
+                    let relationPrev = getRelation(elementPrev, elementCurrent);
+                    if (relationPrev === '克') {
+                        descriptions.push(`<p>${type}：${parts[i]}（数字${currentNum}）被数字${prevNum}（${elementPrev}）克，易有疾病。</p>`);
+                    }
+                    let relationNext = getRelation(elementNext, elementCurrent);
+                    if (relationNext === '克') {
+                        descriptions.push(`<p>${type}：${parts[i]}（数字${currentNum}）被数字${nextNum}（${elementNext}）克，易有疾病。</p>`);
+                    }
+                }
+            } else if (diseaseType === '疾病2') {
+                // 疾病2: 根据数字几被克，输出对应的疾病
+                for (let i = 0; i < len; i++) {
+                    let currentNum = numbers[i];
+                    let prevIndex = (i - 1 + len) % len;
+                    let nextIndex = (i + 1) % len;
+                    let prevNum = numbers[prevIndex];
+                    let nextNum = numbers[nextIndex];
+                    let elementCurrent = getFiveElement(currentNum, i, numbers);
+                    let elementPrev = getFiveElement(prevNum, prevIndex, numbers);
+                    let elementNext = getFiveElement(nextNum, nextIndex, numbers);
+
+                    // 检查是否被克
+                    let relationPrev = getRelation(elementPrev, elementCurrent);
+                    let relationNext = getRelation(elementNext, elementCurrent);
+
+                    if (relationPrev === '克' || relationNext === '克') {
+                        let healthIssue = getHealthIssue(currentNum);
+                        descriptions.push(`<p>${type}：数字${currentNum}被克于数字${relationPrev === '克' ? prevNum : nextNum}，易患疾病：${healthIssue}</p>`);
+                        healthIssuesList.push(healthIssue);
+                    }
+                }
+            } else if (diseaseType === '疾病3') {
+                // 疾病3: 根据相克的两个数字的差值对应的疾病
+                let processedPairs = new Set();
+                for (let i = 0; i < len; i++) {
+                    let currentNum = numbers[i];
+                    let prevIndex = (i - 1 + len) % len;
+                    let nextIndex = (i + 1) % len;
+                    let prevNum = numbers[prevIndex];
+                    let nextNum = numbers[nextIndex];
+                    let elementCurrent = getFiveElement(currentNum, i, numbers);
+                    let elementPrev = getFiveElement(prevNum, prevIndex, numbers);
+                    let elementNext = getFiveElement(nextNum, nextIndex, numbers);
+
+                    // 前一个数字与当前数字
+                    let relationPrev = getRelation(elementPrev, elementCurrent);
+                    if (['克', '被克'].includes(relationPrev)) {
+                        let pairKey = [prevNum, currentNum].sort().join('-');
+                        if (!processedPairs.has(pairKey)) {
+                            processedPairs.add(pairKey);
+                            let diff = Math.abs(currentNum - prevNum);
+                            let healthIssue = getHealthIssue(diff);
+                            descriptions.push(`<p>${type}：数字${prevNum}与数字${currentNum}相克，差值为${diff}，易患疾病：${healthIssue}</p>`);
+                            healthIssuesList.push(healthIssue);
+                        }
+                    }
+
+                    // 当前数字与下一个数字
+                    let relationNext = getRelation(elementCurrent, elementNext);
+                    if (['克', '被克'].includes(relationNext)) {
+                        let pairKey = [currentNum, nextNum].sort().join('-');
+                        if (!processedPairs.has(pairKey)) {
+                            processedPairs.add(pairKey);
+                            let diff = Math.abs(currentNum - nextNum);
+                            let healthIssue = getHealthIssue(diff);
+                            descriptions.push(`<p>${type}：数字${currentNum}与数字${nextNum}相克，差值为${diff}，易患疾病：${healthIssue}</p>`);
+                            healthIssuesList.push(healthIssue);
+                        }
+                    }
+                }
+            }
+
+            if (descriptions.length === 0) {
+                return '<p>未发现相关疾病信息。</p>';
+            } else {
+                return descriptions.join('');
+            }
+        }
+
+        // 物品推断
+        function analyzeObjects(prenatalNumbers, postnatalNumbers) {
+            let html = '<h2>断语4: 物品推断</h2>';
+            let objectMap = {
+                1: '静水或青色物品',
+                2: '流水或水池、排水沟或蓝色物品',
+                3: '白色或土或柜子',
+                4: '大树、木制品或紫色、绿色的东西',
+                5: '花草小树或绿色的东西',
+                6: '浅红、粉色物品或厨房',
+                7: '厨房红色东西',
+                8: '照片、福字、图画或白黄浅黄物品',
+                9: '土或白黄物品、柜子、床',
+                10: '金色、黑色金属物品',
+                11: '金色、黑色金属物品',
+                12: '棕色水'
+            };
+            let directionMap = {
+                1: '北方',
+                2: '东北方',
+                3: '东北方',
+                4: '东方',
+                5: '东南方',
+                6: '东南方',
+                7: '南方',
+                8: '西南方',
+                9: '西南方',
+                10: '西方',
+                11: '西北方',
+                12: '西北方'
+            };
+
+            let descriptions = [];
+            let objectCount = {};
+
+            function checkObjects(numbers, type) {
+                let len = numbers.length;
+                for (let i = 0; i < len; i++) {
+                    let currentNum = numbers[i];
+                    let nextNum = numbers[(i + 1) % len];
+                    let elementCurrent = getFiveElement(currentNum, i, numbers);
+                    let elementNext = getFiveElement(nextNum, (i + 1) % len, numbers);
+                    let relation = getRelation(elementCurrent, elementNext);
+
+                    if (['生', '克', '被生', '被克'].includes(relation)) {
+                        let dirCurrent = directionMap[currentNum];
+                        let objNext = objectMap[nextNum];
+                        let dirNext = directionMap[nextNum];
+                        let objCurrent = objectMap[currentNum];
+                        let desc = `${dirCurrent}有${objNext}`;
+                        descriptions.push(`<p>${type}：${elementCurrent}${relation}${elementNext}（${currentNum}${relation}${nextNum}），则${desc}，也可反推为${dirNext}有${objCurrent}</p>`);
+
+                        // 统计物品出现频次
+                        objectCount[desc] = (objectCount[desc] || 0) + 1;
+                    }
+                }
+            }
+
+            // 先天数
+            checkObjects(prenatalNumbers, '先天数');
+
+            // 后天数
+            checkObjects(postnatalNumbers, '后天数');
+
+            if (descriptions.length === 0) {
+                html += '<p>未发现明显的物品推断。</p>';
+            } else {
+                html += descriptions.join('');
+
+                // 统计总结
+                let maxCount = Math.max(...Object.values(objectCount));
+                let frequentObjects = Object.keys(objectCount).filter(key => objectCount[key] === maxCount);
+                if (frequentObjects.length === 1) {
+                    html += `<p><strong>总结：</strong>最常出现的物品/方向是：${frequentObjects[0]}</p>`;
+                }
+            }
+
+            return html;
+        }
+
+        // 年份断事
+        function analyzeYears(prenatalNumbers, postnatalNumbers) {
+            let html = '<h2>断语5: 年份断事</h2>';
+            let yearMap = {
+                1: 2020,
+                2: 2021,
+                3: 2022,
+                4: 2023,
+                5: 2024,
+                6: 2025,
+                7: 2026,
+                8: 2027,
+                9: 2028,
+                10: 2029,
+                11: 2030,
+                12: 2031
+            };
+
+            let descriptions = [];
+            let eventCount = {};
+
+            function checkYears(numbers, type) {
+                let len = numbers.length;
+                for (let i = 0; i < len; i++) {
+                    let currentNum = numbers[i];
+                    let nextNum = numbers[(i + 1) % len];
+                    let elementCurrent = getFiveElement(currentNum, i, numbers);
+                    let elementNext = getFiveElement(nextNum, (i + 1) % len, numbers);
+                    let relation = getRelation(elementCurrent, elementNext);
+
+                    let yearCurrent = yearMap[currentNum];
+                    let yearNext = yearMap[nextNum];
+                    let description = '';
+                    let event = '';
+
+                    // 新增逻辑：相同数字且相邻（包括首尾）
+                    if (currentNum === nextNum) {
+                        description = `数字${currentNum}与数字${nextNum}相同且相邻，${yearCurrent}年有贵人相助。`;
+                        event = { year: yearCurrent, event: '贵人相助' };
+                        descriptions.push(`<p>${type}：${description}</p>`);
+                        eventCount[yearCurrent] = eventCount[yearCurrent] || {};
+                        eventCount[yearCurrent]['贵人相助'] = (eventCount[yearCurrent]['贵人相助'] || 0) + 1;
+                        continue; // 跳过后续判断
+                    }
+
+                    if (['生', '克', '被生', '被克'].includes(relation)) {
+                        if (relation === '生') {
+                            description = `以${currentNum}为主，${yearCurrent}年破财；以${nextNum}为主，${yearNext}年进财。`;
+                            event = [
+                                { year: yearCurrent, event: '破财' },
+                                { year: yearNext, event: '进财' }
+                            ];
+                        } else if (relation === '克') {
+                            description = `以${currentNum}为主，${yearCurrent}年辛苦得财；以${nextNum}为主，${yearNext}年招灾。`;
+                            event = [
+                                { year: yearCurrent, event: '辛苦得财' },
+                                { year: yearNext, event: '招灾' }
+                            ];
+                        } else if (relation === '被生') {
+                            description = `以${currentNum}为主，${yearCurrent}年进财；以${nextNum}为主，${yearNext}年破财。`;
+                            event = [
+                                { year: yearCurrent, event: '进财' },
+                                { year: yearNext, event: '破财' }
+                            ];
+                        } else if (relation === '被克') {
+                            description = `以${currentNum}为主，${yearCurrent}年招灾；以${nextNum}为主，${yearNext}年辛苦得财。`;
+                            event = [
+                                { year: yearCurrent, event: '招灾' },
+                                { year: yearNext, event: '辛苦得财' }
+                            ];
+                        }
+
+                        descriptions.push(`<p>${type}：${elementCurrent}${relation}${elementNext}（${currentNum}${relation}${nextNum}），${description}</p>`);
+
+                        // 统计事件频次，按照年份分类
+                        event.forEach(e => {
+                            eventCount[e.year] = eventCount[e.year] || {};
+                            eventCount[e.year][e.event] = (eventCount[e.year][e.event] || 0) + 1;
+                        });
+                    }
+                }
+            }
+
+            // 先天数
+            checkYears(prenatalNumbers, '先天数');
+
+            // 后天数
+            checkYears(postnatalNumbers, '后天数');
+
+            if (descriptions.length === 0) {
+                html += '<p>未发现明显的年份断事。</p>';
+            } else {
+                html += descriptions.join('');
+
+                // 统计总结
+                // 将相同年份的"辛苦得财"和"进财"统一视为该年份的"得财"
+                // 将"辛苦得财"、"进财"和"贵人相助"统一视为"顺利"
+                // 将"破财"和"招灾"统一视为"不顺利"
+
+                let summaryCount = {};
+
+                for (let year in eventCount) {
+                    let events = eventCount[year];
+                    let yearSummary = {
+                        '得财': 0,
+                        '不顺利': 0,
+                        '贵人相助': 0,
+                        '顺利': 0
+                    };
+                    for (let event in events) {
+                        let count = events[event];
+                        if (['辛苦得财', '进财'].includes(event)) {
+                            yearSummary['得财'] += count;
+                            yearSummary['顺利'] += count;
+                        } else if (event === '贵人相助') {
+                            yearSummary['贵人相助'] += count;
+                            yearSummary['顺利'] += count;
+                        } else if (['破财', '招灾'].includes(event)) {
+                            yearSummary['不顺利'] += count;
+                        }
+                        // 保留原始事件的数
+                        yearSummary[event] = count;
+                    }
+                    summaryCount[year] = yearSummary;
+                }
+
+                // 输出总结
+                html += '<h3>年份总结：</h3>';
+                for (let year in summaryCount) {
+                    let events = summaryCount[year];
+                    let eventStrings = [];
+                    for (let event in events) {
+                        if (['得财', '不顺利', '贵人相助', '顺利'].includes(event)) continue;
+                        eventStrings.push(`${event}（${events[event]}次）`);
+                    }
+                    html += `<p>${year}年：${eventStrings.join('，')}</p>`;
+                }
+            }
+
+            return html;
+        }
+
+        // 磁场归藏
+        function analyzeMagneticFields(prenatalNumbers, postnatalNumbers) {
+            let html = '<h2>断语6: 磁场归藏</h2>';
+
+            let descriptions = [];
+
+            function checkMagneticFields(numbers, type) {
+                for (let i = 0; i < numbers.length; i++) {
+                    for (let j = i + 1; j < numbers.length; j++) {
+                        let num1 = numbers[i];
+                        let num2 = numbers[j];
+                        let gua1 = guaMap[num1];
+                        let gua2 = guaMap[num2];
+                        let yao1 = guaYao[gua1];
+                        let yao2 = guaYao[gua2];
+                        let differences = yao1.map((v, idx) => v !== yao2[idx]);
+                        let diffCount = differences.filter(v => v).length;
+                        let field = '';
+
+                        if (diffCount === 1 && differences[0]) field = '祸害磁场';
+                        else if (diffCount === 1 && differences[1]) field = '绝命磁场';
+                        else if (diffCount === 1 && differences[2]) field = '升气磁场';
+                        else if (diffCount === 2 && differences[1] && differences[2]) field = '五鬼磁场';
+                        else if (diffCount === 2 && differences[0] && differences[1]) field = '天医磁场';
+                        else if (diffCount === 2 && differences[0] && differences[2]) field = '陆煞磁场';
+                        else if (diffCount === 3) field = '延年磁场';
+                        else if (diffCount === 0) field = '辅弼磁场';
+
+                        if (['祸害磁场', '绝命磁场', '五鬼磁场', '陆煞磁场'].includes(field)) {
+                            let fieldDescription = getFieldDescription(field);
+                            let colorClass = (field === '绝命磁场' || field === '五鬼磁场') ? 'red' : 'highlight';
+                            descriptions.push(`<p class="${colorClass}">${type}：${num1}（${gua1}${guaSymbols[gua1]}）与${num2}（${gua2}${guaSymbols[gua2]}）形成${field}，${fieldDescription}</p>`);
+                        }
+                    }
+                }
+            }
+
+            function getFieldDescription(field) {
+                switch (field) {
+                    case '祸害磁场':
+                        return '1小孩住在祸害位对眼睛不好。2单身孤寡住在祸害位，可以延年益寿。3住在祸害磁场的人，喜欢抱怨，爱钻牛角尖，表面强硬内心脆弱。4刚结婚的夫妇住在祸害位容易吵架，可能导致离婚，还可能出现不孕不育，或者孩子易出现听力或肢体伤残问题。';
+                    case '绝命磁场':
+                        return '1住在绝命磁场的人容易情绪或事业大起大落，性格极端化。2心肠软，重情重义，遇事执着，自以为是，爱面子。3长期居住容易产生投机心理，导致投资失败，留不住财。4婚姻协调与沟通力差，家庭关系紧张。5容易患痛风、糖尿病、妇科疾病、肝胆肾结石。6容易生破财、交通事故等问题。';
+                    case '五鬼磁场':
+                        return '1容易感召阴性力量，住在此处的人有宗教心，有偏财运，但财来财去，留不住。2性格阴沉、疑心重、城府深、戒备心强，处理问题极端化，易有血光之灾。3婚姻方面易出轨或婚外情，住在此处的女人易暴躁，沟通困难。4健康方面，住在五鬼磁场的人易患心脏疾病、意外手术等严重疾病。';
+                    case '陆煞磁场':
+                        return '1男孩住此位置易拉肚子，女孩易发烧；女人会变得犹豫斤斤计较，甚至变成"女汉子"。2犯桃花时无健康问题未犯桃花，男性易有肠胃病，女性易患妇科疾病。3单身者可住此位促花，但恋爱后需搬离，否则难以结果。4健康问题多为肠胃病、妇科病和抑郁症。';
+                    default:
+                        return '';
+                }
+            }
+
+            // 先天数
+            checkMagneticFields(prenatalNumbers, '先天数');
+
+            // ��天数
+            checkMagneticFields(postnatalNumbers, '后天数');
+
+            if (descriptions.length === 0) {
+                html += '<p>未发现明显的磁场问题。</p>';
+            } else {
+                html += descriptions.join('');
+            }
+
+            return html;
+        }
+
+        // 添加新的输入框
+        function addInput() {
+            const container = document.getElementById('inputContainer');
+            const inputGroup = document.createElement('div');
+            inputGroup.className = 'input-group';
+            
+            inputGroup.innerHTML = `
+                <input type="text" class="number-input" placeholder="请输入手机号或车牌号后四位" maxlength="4" oninput="handleInput(this)">
+                <button type="button" class="remove-btn" onclick="removeInput(this)">删除</button>
+            `;
+            
+            container.appendChild(inputGroup);
+            
+            // 显示所有删除按钮
+            const removeButtons = document.getElementsByClassName('remove-btn');
+            for (let btn of removeButtons) {
+                btn.style.display = 'inline-block';
+            }
+        }
+
+        // 添加新的 handleInput 函数
+        function handleInput(input) {
+            const value = input.value.trim().toUpperCase();
+            input.value = value;
+            
+            if (value.length === 4) {
+                if (/^[A-Z0-9]{4}$/.test(value)) {
+                    const isLastInput = input.closest('.input-group') === input.closest('#inputContainer').lastElementChild;
+                    if (isLastInput) {
+                        addInput();
+                        setTimeout(() => {
+                            const inputs = document.getElementsByClassName('number-input');
+                            inputs[inputs.length - 1].focus();
+                        }, 0);
+                    } else {
+                        const nextInput = input.closest('.input-group').nextElementSibling.querySelector('.number-input');
+                        nextInput.focus();
+                    }
+                }
+            }
+        }
+
+        // 删除输入框
+        function removeInput(button) {
+            const container = document.getElementById('inputContainer');
+            button.parentElement.remove();
+            
+            // 如果只剩一个输入框，隐藏其删除按钮
+            if (container.children.length === 1) {
+                container.querySelector('.remove-btn').style.display = 'none';
+            }
+        }
+
+        let currentPage = 0;
+        let allResults = [];
+
+        // 分析所有输入的号码
+        function analyzeAll() {
+            const inputs = document.getElementsByClassName('number-input');
+            const gender = document.getElementById('gender').value;
+            
+            allResults = [];
+            let filteredResults = [];
+            
+            // 分析每个输入的号码
+            for (let input of inputs) {
+                const number = input.value.trim();
+                if (!number) continue;
+                
+                // 创建临时的结果容器
+                const tempResult = document.createElement('div');
+                tempResult.id = 'result';
+                document.body.appendChild(tempResult);
+                
+                // 执行分析
+                const numbers = parseInput(number);
+                if (numbers.length !== 4) {
+                    alert(`号码 ${number} 格式不正确！`);
+                    tempResult.remove();
+                    continue;
+                }
+
+                // 计算先天数和后天数
+                const prenatalNumbers = numbers.slice();
+                const postnatalNumbers = numbers.map(n => n <= 6 ? n + 6 : n - 6);
+
+                // 检查是否有五鬼磁场或绝命磁场
+                let hasBadField = false;
+                const checkBadFields = (numbers) => {
+                    for (let i = 0; i < numbers.length; i++) {
+                        for (let j = i + 1; j < numbers.length; j++) {
+                            const num1 = numbers[i];
+                            const num2 = numbers[j];
+                            const gua1 = guaMap[num1];
+                            const gua2 = guaMap[num2];
+                            const yao1 = guaYao[gua1];
+                            const yao2 = guaYao[gua2];
+                            const differences = yao1.map((v, idx) => v !== yao2[idx]);
+                            const diffCount = differences.filter(v => v).length;
+
+                            if ((diffCount === 1 && differences[1]) || // 绝命磁场
+                                (diffCount === 2 && differences[1] && differences[2])) { // 五鬼磁场
+                                hasBadField = true;
+                                return;
+                            }
+                        }
+                    }
+                };
+
+                checkBadFields(prenatalNumbers);
+                if (!hasBadField) checkBadFields(postnatalNumbers);
+
+                // 执行完整分析
+                input.value = number; // 设置当前输入值
+                tempResult.innerHTML = analyze(number, gender); // 使用修改后的 analyze 函数
+                
+                // 保存分析结果
+                const result = {
+                    number: number,
+                    content: tempResult.innerHTML,
+                    hasBadField: hasBadField
+                };
+                
+                allResults.push(result);
+                if (!hasBadField) {
+                    filteredResults.push(result);
+                }
+                
+                // 移除临���容器
+                tempResult.remove();
+            }
+
+            // 显示筛选结果
+            const filteredContent = document.getElementById('filteredContent');
+            filteredContent.innerHTML = '';
+            if (filteredResults.length > 0) {
+                // 将结果分为两组：无磁场问题的和有磁场问题的
+                const noFieldResults = [];
+                const withFieldResults = [];
+                
+                // 创建一个解析器实例
+                const parser = new DOMParser();
+                
+                filteredResults.forEach(result => {
+                    const doc = parser.parseFromString(result.content, 'text/html');
+                    
+                    // 修改获取磁场信息的方式，使用数组存储所有出现的磁场
+                    const magneticFields = [];
+                    // 先找到断语6的部分
+                    const magneticFieldsSection = Array.from(doc.querySelectorAll('h2'))
+                        .find(h2 => h2.textContent.includes('断语6'))
+                        ?.parentElement;
+                        
+                    if (magneticFieldsSection) {
+                        // 查找所有段落
+                        magneticFieldsSection.querySelectorAll('p').forEach(p => {
+                            const text = p.textContent;
+                            // 检查每种磁场类型
+                            if (text.includes('形成祸害磁场')) {
+                                magneticFields.push('祸害磁场');
+                            }
+                            if (text.includes('形成绝命磁场')) {
+                                magneticFields.push('绝命磁场');
+                            }
+                            if (text.includes('形成五鬼磁场')) {
+                                magneticFields.push('五鬼磁场');
+                            }
+                            if (text.includes('形成陆煞磁场')) {
+                                magneticFields.push('陆煞磁场');
+                            }
+                        });
+                    }
+                    
+                    if (magneticFields.length === 0) {
+                        noFieldResults.push({ ...result, magneticFields });
+                    } else {
+                        withFieldResults.push({ ...result, magneticFields });
+                    }
+                });
+
+                // 添加符合条件的号码小结，先显示无磁场问题的号码
+                let summaryHtml = '<div class="summary"><h3>符合条件的号码：</h3>';
+                if (noFieldResults.length > 0) {
+                    summaryHtml += '<p class="golden-numbers">无磁场问题的号码：' + 
+                        noFieldResults.map(result => result.number).join('、') + '</p>';
+                }
+                if (withFieldResults.length > 0) {
+                    summaryHtml += '<p class="normal-numbers">其他符合条件的号码：' + 
+                        withFieldResults.map(result => result.number).join('、') + '</p>';
+                }
+                summaryHtml += '</div>';
+                filteredContent.innerHTML = summaryHtml;
+
+                // 先显示无磁场问题的号码分析
+                noFieldResults.forEach(result => {
+                    const resultDiv = document.createElement('div');
+                    const doc = parser.parseFromString(result.content, 'text/html');
+                    
+                    // 只保留断语1和断语2
+                    const relevantSections = Array.from(doc.querySelectorAll('h2'))
+                        .filter(h2 => h2.textContent.includes('断语1') || h2.textContent.includes('断语2'))
+                        .map(h2 => {
+                            const section = document.createElement('div');
+                            section.appendChild(h2.cloneNode(true));
+                            let nextElement = h2.nextElementSibling;
+                            while (nextElement && nextElement.tagName !== 'H2') {
+                                section.appendChild(nextElement.cloneNode(true));
+                                nextElement = nextElement.nextElementSibling;
+                            }
+                            return section.innerHTML;
+                        })
+                        .join('');
+
+                    // 构建号码信息的显示
+                    const numberInfo = `
+                        <div class="number-header">
+                            <span class="number golden">号码：${result.number}</span>
+                            <span class="magnetic-fields">未发现明显的磁场问题</span>
+                        </div>
+                    `;
+                    
+                    resultDiv.innerHTML = numberInfo + relevantSections;
+                    filteredContent.appendChild(resultDiv);
+                });
+
+                // 然后显示有磁场问题的号码分析
+                withFieldResults.forEach(result => {
+                    const resultDiv = document.createElement('div');
+                    const doc = parser.parseFromString(result.content, 'text/html');
+                    
+                    // 只保留断语1和断语2
+                    const relevantSections = Array.from(doc.querySelectorAll('h2'))
+                        .filter(h2 => h2.textContent.includes('断语1') || h2.textContent.includes('断语2'))
+                        .map(h2 => {
+                            const section = document.createElement('div');
+                            section.appendChild(h2.cloneNode(true));
+                            let nextElement = h2.nextElementSibling;
+                            while (nextElement && nextElement.tagName !== 'H2') {
+                                section.appendChild(nextElement.cloneNode(true));
+                                nextElement = nextElement.nextElementSibling;
+                            }
+                            return section.innerHTML;
+                        })
+                        .join('');
+
+                    // 构建号码和磁场信息的显示，直接使用数组的 join 方法，不去重
+                    const numberInfo = `
+                        <div class="number-header">
+                            <span class="number">号码: ${result.number}</span>
+                            <span class="magnetic-fields">${result.magneticFields.join('，')}</span>
+                        </div>
+                    `;
+                    
+                    resultDiv.innerHTML = numberInfo + relevantSections;
+                    filteredContent.appendChild(resultDiv);
+                });
+            } else {
+                filteredContent.innerHTML = '<p>没有找到符合条件的号码。</p>';
+            }
+
+            // 显示分页结果
+            currentPage = 0;
+            showPage();
+
+            // 显示结果区域
+            document.getElementById('filteredResults').style.display = 'block';
+            document.getElementById('paginatedResults').style.display = 'block';
+        }
+
+        // 显示当前页
+        function showPage() {
+            const pageContent = document.getElementById('pageContent');
+            const pageInfo = document.getElementById('pageInfo');
+            
+            if (allResults.length === 0) {
+                pageContent.innerHTML = '<p>没有分析结果。</p>';
+                pageInfo.textContent = '0/0';
+                return;
+            }
+
+            const result = allResults[currentPage];
+            pageContent.innerHTML = `<h3>号码：${result.number}</h3>${result.content}`;
+            pageInfo.textContent = `${currentPage + 1}/${allResults.length}`;
+        }
+
+        // 上一页
+        function prevPage() {
+            if (currentPage > 0) {
+                currentPage--;
+                showPage();
+            }
+        }
+
+        // 下一页
+        function nextPage() {
+            if (currentPage < allResults.length - 1) {
+                currentPage++;
+                showPage();
+            }
+        }
+    </script>
+</body>
+</html>
+ `
